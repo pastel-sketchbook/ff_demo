@@ -15,26 +15,26 @@ This project teaches:
 
 ## Quick Start
 
-### Build (default, no features)
+### Build (default, includes lucky-number by default)
 ```bash
 task build
 cargo run
+# Output: Hello, world!
+#         Your lucky number: 42
+```
+
+### Build with Minimal Features (Opt-Out)
+```bash
+task run:minimal
+cargo run --no-default-features
 # Output: Hello, world!
 ```
 
 ### Build with print-42 Feature
 ```bash
-task build:print-42
 cargo run --features print-42
 # Output: 42
-```
-
-### Build with lucky-number Feature (Conditional Dependency)
-```bash
-task build:lucky-number
-cargo run --features lucky-number
-# Output: Hello, world!
-#         Your lucky number: 42
+#         Your lucky number: 95  (lucky-number enabled by default)
 ```
 
 ### Build with All Features
@@ -42,25 +42,27 @@ cargo run --features lucky-number
 task build:all-features
 cargo run --all-features
 # Output: 42
-#         Your lucky number: 95
+#         Your lucky number: 27
 ```
 
 ## Available Tasks
 
 | Task | Description |
 |------|-------------|
-| `task build` | Build without features |
+| `task build` | Build with default features (includes lucky-number) |
 | `task build:print-42` | Build with `print-42` feature |
 | `task build:lucky-number` | Build with `lucky-number` feature |
 | `task build:all-features` | Build with all features |
-| `task run` | Run default output |
+| `task run` | Run with default features |
 | `task run:print-42` | Run with `print-42` feature |
 | `task run:lucky-number` | Run with `lucky-number` feature |
 | `task run:all-features` | Run with all features |
-| `task check` | Quick compile check (no features) |
+| `task run:minimal` | Run with no default features (opt-out) |
+| `task check` | Quick compile check (default features) |
 | `task check:print-42` | Quick compile check with `print-42` |
 | `task check:lucky-number` | Quick compile check with `lucky-number` |
 | `task check:all-features` | Quick compile check with all features |
+| `task check:minimal` | Quick compile check with no defaults (opt-out) |
 | `task fmt` | Format code |
 | `task lint` | Run clippy linter |
 | `task test` | Run all tests |
@@ -119,11 +121,11 @@ When `json-support` is enabled, `serde` is compiled and available. When disabled
 - **No runtime equivalent**: Unlike environment variables, feature flags cannot be changed at runtime.
 - **Mutually exclusive defaults**: A feature is **disabled by default** unless explicitly enabled by the user or listed as a default.
 
-## Real-World Example: The `lucky-number` Feature
+## Real-World Example: Default Features
 
-This project includes a practical example: the `lucky-number` feature that pulls in the `rand` crate.
+This project demonstrates **default features** — functionalities enabled by default but available for power users to opt-out.
 
-### The Feature Setup
+### The Setup
 
 In `Cargo.toml`:
 ```toml
@@ -131,47 +133,60 @@ In `Cargo.toml`:
 rand = { version = "0.8", optional = true }
 
 [features]
-lucky-number = ["rand"]
+default = ["lucky-number"]  # This feature is enabled by default
+print-42 = []
+lucky-number = ["rand"]     # Gates the rand crate
 ```
 
-The `rand` crate is marked `optional = true`, so it's not compiled by default. The `lucky-number` feature explicitly includes `rand` in its dependency list.
+The `default` vector lists features that are enabled automatically. Users who want a slimmer build can use `--no-default-features` to exclude them.
 
-### Code Implementation
+### Default vs. Opt-Out
 
-```rust
-#[cfg(feature = "lucky-number")]
-fn generate_lucky_number() -> u32 {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    rng.gen_range(1..=100)
-}
+**Default behavior (standard experience)**:
+```bash
+cargo build
+cargo run
+# Compiles with lucky-number enabled
+# Output: Hello, world!
+#         Your lucky number: 42
 ```
 
-Only when the `lucky-number` feature is enabled does this function (and the `rand` crate) get compiled.
+**Power users opting out (slim build)**:
+```bash
+cargo build --no-default-features
+cargo run --no-default-features
+# Excludes lucky-number, no rand crate compiled
+# Output: Hello, world!
+```
 
-### Binary Size Impact
+### Use Cases
 
-- **Without feature**: ~2.8 MB (lean, no `rand`)
-- **With feature**: ~3.2 MB (includes `rand` and dependencies)
+**Default features shine when**:
+- Most users want the feature (e.g., logging, async runtime)
+- The dependency is small overhead (e.g., logging)
+- Opt-out burden is acceptable (power users know the flag)
 
-By keeping heavy dependencies optional, you let users build exactly what they need.
+**Opt-in features are better when**:
+- Feature is heavy or rarely used (e.g., TLS, serialization)
+- Users must explicitly choose (e.g., database drivers)
+- You want minimal default footprint
 
 ### Testing Both Paths
 
-Run tasks to verify the feature works in all configurations:
+Verify the feature works in both configurations:
 
 ```bash
-# Test without the feature
+# Default: lucky-number enabled
 task check              # compiles
-task run               # outputs "Hello, world!"
+task run               # outputs with lucky number
 
-# Test with the feature
-task check:lucky-number # compiles
-task run:lucky-number  # outputs "Hello, world!\nYour lucky number: 42"
+# Opt-out: no defaults
+task check:minimal      # compiles
+task run:minimal       # outputs without lucky number
 
-# Test all features together
-task check:all-features # compiles all feature combinations
-task run:all-features   # runs with all enabled
+# Both paths in tests
+cargo test              # tests with defaults
+cargo test --no-default-features # tests without defaults
 ```
 
 ## Development Workflow

@@ -72,6 +72,16 @@ tasks:
     cmds:
       - cargo run --all-features
 
+  run:minimal:
+    desc: Run the program with no default features (opt-out)
+    cmds:
+      - cargo run --no-default-features
+
+  check:minimal:
+    desc: Quick compile check with no default features (opt-out)
+    cmds:
+      - cargo check --no-default-features
+
   test:
     desc: Run all tests
     cmds:
