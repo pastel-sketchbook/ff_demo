@@ -1,0 +1,69 @@
+version: "3"
+
+vars:
+  SHELL: bash
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  fmt:
+    desc: Format code with rustfmt
+    cmds:
+      - cargo fmt
+
+  fmt:check:
+    desc: Check if code is formatted (CI-friendly)
+    cmds:
+      - cargo fmt -- --check
+
+  lint:
+    desc: Run clippy linter
+    cmds:
+      - cargo clippy -- -D warnings
+
+  build:
+    desc: Build the project (default, without feature)
+    deps: [fmt, lint]
+    cmds:
+      - cargo build
+
+  build:print-42:
+    desc: Build with print-42 feature enabled
+    deps: [fmt, lint]
+    cmds:
+      - cargo build --features print-42
+
+  run:
+    desc: Run the program (default output)
+    deps: [build]
+    cmds:
+      - cargo run
+
+  run:print-42:
+    desc: Run the program with print-42 feature enabled
+    deps: [build:print-42]
+    cmds:
+      - cargo run --features print-42
+
+  test:
+    desc: Run all tests
+    cmds:
+      - cargo test
+
+  check:
+    desc: Quick compile check without building
+    cmds:
+      - cargo check
+
+  check:print-42:
+    desc: Quick compile check with print-42 feature enabled
+    cmds:
+      - cargo check --features print-42
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - cargo clean
