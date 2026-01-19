@@ -36,6 +36,18 @@ tasks:
     cmds:
       - cargo build --features print-42
 
+  build:lucky-number:
+    desc: Build with lucky-number feature enabled
+    deps: [fmt, lint]
+    cmds:
+      - cargo build --features lucky-number
+
+  build:all-features:
+    desc: Build with all features enabled
+    deps: [fmt, lint]
+    cmds:
+      - cargo build --all-features
+
   run:
     desc: Run the program (default output)
     deps: [build]
@@ -47,6 +59,18 @@ tasks:
     deps: [build:print-42]
     cmds:
       - cargo run --features print-42
+
+  run:lucky-number:
+    desc: Run the program with lucky-number feature enabled
+    deps: [build:lucky-number]
+    cmds:
+      - cargo run --features lucky-number
+
+  run:all-features:
+    desc: Run the program with all features enabled
+    deps: [build:all-features]
+    cmds:
+      - cargo run --all-features
 
   test:
     desc: Run all tests
@@ -62,6 +86,16 @@ tasks:
     desc: Quick compile check with print-42 feature enabled
     cmds:
       - cargo check --features print-42
+
+  check:lucky-number:
+    desc: Quick compile check with lucky-number feature enabled
+    cmds:
+      - cargo check --features lucky-number
+
+  check:all-features:
+    desc: Quick compile check with all features enabled
+    cmds:
+      - cargo check --all-features
 
   clean:
     desc: Clean build artifacts

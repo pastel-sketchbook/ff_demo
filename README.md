@@ -15,32 +15,55 @@ This project teaches:
 
 ## Quick Start
 
-### Build (default)
+### Build (default, no features)
 ```bash
 task build
-# Output: Hello, world!
 cargo run
+# Output: Hello, world!
 ```
 
-### Build with Feature
+### Build with print-42 Feature
 ```bash
 task build:print-42
-# Output: 42
 cargo run --features print-42
+# Output: 42
+```
+
+### Build with lucky-number Feature (Conditional Dependency)
+```bash
+task build:lucky-number
+cargo run --features lucky-number
+# Output: Hello, world!
+#         Your lucky number: 42
+```
+
+### Build with All Features
+```bash
+task build:all-features
+cargo run --all-features
+# Output: 42
+#         Your lucky number: 95
 ```
 
 ## Available Tasks
 
 | Task | Description |
 |------|-------------|
-| `task build` | Build without feature |
+| `task build` | Build without features |
 | `task build:print-42` | Build with `print-42` feature |
+| `task build:lucky-number` | Build with `lucky-number` feature |
+| `task build:all-features` | Build with all features |
 | `task run` | Run default output |
-| `task run:print-42` | Run with feature enabled |
+| `task run:print-42` | Run with `print-42` feature |
+| `task run:lucky-number` | Run with `lucky-number` feature |
+| `task run:all-features` | Run with all features |
+| `task check` | Quick compile check (no features) |
+| `task check:print-42` | Quick compile check with `print-42` |
+| `task check:lucky-number` | Quick compile check with `lucky-number` |
+| `task check:all-features` | Quick compile check with all features |
 | `task fmt` | Format code |
 | `task lint` | Run clippy linter |
-| `task test` | Run tests |
-| `task check` | Quick compile check |
+| `task test` | Run all tests |
 | `task clean` | Clean build artifacts |
 
 ## How Feature Flags Work
@@ -95,6 +118,61 @@ When `json-support` is enabled, `serde` is compiled and available. When disabled
 - **Compile-time**: Features are resolved during compilation; there's no runtime overhead.
 - **No runtime equivalent**: Unlike environment variables, feature flags cannot be changed at runtime.
 - **Mutually exclusive defaults**: A feature is **disabled by default** unless explicitly enabled by the user or listed as a default.
+
+## Real-World Example: The `lucky-number` Feature
+
+This project includes a practical example: the `lucky-number` feature that pulls in the `rand` crate.
+
+### The Feature Setup
+
+In `Cargo.toml`:
+```toml
+[dependencies]
+rand = { version = "0.8", optional = true }
+
+[features]
+lucky-number = ["rand"]
+```
+
+The `rand` crate is marked `optional = true`, so it's not compiled by default. The `lucky-number` feature explicitly includes `rand` in its dependency list.
+
+### Code Implementation
+
+```rust
+#[cfg(feature = "lucky-number")]
+fn generate_lucky_number() -> u32 {
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    rng.gen_range(1..=100)
+}
+```
+
+Only when the `lucky-number` feature is enabled does this function (and the `rand` crate) get compiled.
+
+### Binary Size Impact
+
+- **Without feature**: ~2.8 MB (lean, no `rand`)
+- **With feature**: ~3.2 MB (includes `rand` and dependencies)
+
+By keeping heavy dependencies optional, you let users build exactly what they need.
+
+### Testing Both Paths
+
+Run tasks to verify the feature works in all configurations:
+
+```bash
+# Test without the feature
+task check              # compiles
+task run               # outputs "Hello, world!"
+
+# Test with the feature
+task check:lucky-number # compiles
+task run:lucky-number  # outputs "Hello, world!\nYour lucky number: 42"
+
+# Test all features together
+task check:all-features # compiles all feature combinations
+task run:all-features   # runs with all enabled
+```
 
 ## Development Workflow
 
